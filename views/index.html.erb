@@ -1,0 +1,29 @@
+<div id="map"></div>
+
+<script>
+
+var map = L.map('map');
+L.esri.basemapLayer("Gray").addTo(map);
+
+var triggerList = JSON.parse('<%= @trigger_list.to_json %>');
+
+var cs = triggerList.boundingBox.coordinates[0];
+var sw = new L.LatLng(cs[0][1], cs[0][0]);
+var ne = new L.LatLng(cs[2][1], cs[2][0]);
+var bounds = new L.LatLngBounds(sw, ne);
+map.fitBounds(bounds);
+
+var locLayer = L.geoJson(null, { style: { color: "#00ff00" } }).addTo(map);
+
+for (var i = 0; i < triggerList.triggers.length; i++) {
+  var trigger = triggerList.triggers[i];
+  var geojson = {
+    id: trigger.triggerId,
+    type: "Feature",
+    properties: null,
+    geometry: trigger.condition.geo.geojson
+  };
+  locLayer.addData(geojson);
+}
+
+</script>
