@@ -2,8 +2,10 @@
 
 <script>
 
+var sliderControl = null;
 var map = L.map('map');
 L.esri.basemapLayer("Gray").addTo(map);
+
 
 var triggerList = JSON.parse('<%= @trigger_list.to_json %>');
 
@@ -16,14 +18,67 @@ map.fitBounds(bounds);
 var locLayer = L.geoJson(null, { style: { color: "#00ff00" } }).addTo(map);
 
 for (var i = 0; i < triggerList.triggers.length; i++) {
-  var trigger = triggerList.triggers[i];
-  var geojson = {
-    id: trigger.triggerId,
+    var trigger = triggerList.triggers[i];
+    var geojson = {
+id: trigger.triggerId,
     type: "Feature",
     properties: null,
     geometry: trigger.condition.geo.geojson
-  };
-  locLayer.addData(geojson);
+    };
+    locLayer.addData(geojson);
 }
 
+// Load Path Data
+$.getJSON("data/path.geojson", function(json) {
+        var pathLayer = L.geoJson(json);
+        pathLayer.addTo(map);
+    });
+
+// Load Slider Data
+$.getJSON("data/slider.geojson", function(json) {
+        var testlayer = L.geoJson(json, {
+            style: function(feature) {
+                return feature.properties;
+            }});
+
+      sliderControl = L.control.sliderControl({
+        position: "topright",
+        layer: testlayer,
+        range: true
+        });
+
+    //Make sure to add the slider to the map ;-)
+    map.addControl(sliderControl);
+    //And initialize the slider
+    sliderControl.startSlider();
+  });
+
+/*
+
+var timer_index = 0;
+var timer = setInterval( getTimeslice, 100);
+var prev_timer_layer;
+
+function getTimeslice() {
+
+    $.get('timeslice?index='+timer_index,
+            loadTimeslice );
+}
+
+function loadTimeslice(data) {
+    timer_index += 1;
+    console.log(data);
+    timer_layer = L.geoJson( JSON.parse(data) );
+    timer_layer.addTo(map);
+
+    if (prev_timer_layer) {
+        map.removeLayer(prev_timer_layer);
+    }
+
+    prev_timer_layer = timer_layer;
+
+}
+
+// clearInterval(timer)
+*/
 </script>
