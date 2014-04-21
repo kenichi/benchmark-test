@@ -52,6 +52,7 @@ module Benchmark
       end
 
       sorted = items.sort_by &:timestamp
+      return [] if items.empty?
       @start_time = sorted.first.timestamp
       @end_time = sorted.last.timestamp
 
