@@ -1,36 +1,56 @@
-class Path
+module Benchmark
+  class Path
 
-  include Benchmark::CSV
-  include Benchmark::Time
+    include Benchmark::CSV
+    include Benchmark::Time
 
-  attr_reader :items
+    attr_reader :items
 
-  manage_timestamps :items
+    manage_timestamps :items
 
-  def csv_header
-    %w{ Timestamp Lon Lat Accuracy }
-  end
+    def to_feature opts={}
 
-  def csv_body
-    @items.collect do |item|
-      [item.timestamp, item.lon, item.lat, item.accuracy]
+      properties = {}
+      properties.merge(opts[:properties]) if opts[:properties]
+
+      coords = items.collect{|i| i.coordinates}
+
+      Benchmark::FeatureWriter.create_line coords, properties
+    end
+
+    def csv_header
+      %w{ Timestamp Lon Lat Accuracy }
+    end
+
+    def csv_body
+      @items.collect do |item|
+        [item.timestamp, item.lon, item.lat, item.accuracy]
+      end
     end
   end
-end
 
-class Item
+  class Item
 
-  attr_reader :timestamp, :lon, :lat, :accuracy
+    attr_reader :timestamp, :lon, :lat, :accuracy
 
-  def initialize opts={}
-    @timestamp = opts[:timestamp]
-    @lon = opts[:lon]
-    @lat = opts[:lat]
-    @accuracy = opts[:accuracy]
+    def initialize opts={}
+      @timestamp = opts[:timestamp]
+      @lon = opts[:lon]
+      @lat = opts[:lat]
+      @accuracy = opts[:accuracy]
+    end
+
+    def coordinates
+      [lon, lat]
+    end
+
+    def to_feature opts={}
+      properties = {}
+      properties["time"] = Time.at(timestamp).to_s
+      properties.merge(opts[:properties]) if opts[:properties]
+
+      Benchmark::FeatureWriter.create_point self, properties
+    end
+
   end
-
-  def coordinates
-    [lon, lat]
-  end
-
 end
