@@ -11,7 +11,7 @@ module Benchmark
       @color_bin_size = (@end_time - @start_time)/COLORS.length
     end
 
-    def create_point item, properties
+    def self.create_point item, properties
       {
         type: "Feature",
         properties: properties,
@@ -22,7 +22,7 @@ module Benchmark
       }
     end
 
-    def create_line coord_array, properties={}
+    def self.create_line coord_array, properties={}
       {
         type: "Feature",
         properties: properties,
@@ -33,13 +33,13 @@ module Benchmark
       }
     end
 
-    def create_marker item, opts={}
+    def self.create_marker item, opts={}
       properties = {}
       properties['marker-size'] = opts[:size] if opts[:size]
       properties['marker-color'] = opts[:color] if opts[:color]
       properties['marker-symbol'] = opts[:symbol] if opts[:symbol]
 
-      create_point(item, properties)
+      Benchmark::FeatureWriter.create_point(item, properties)
     end
 
     def featurify_path path, opts={}
@@ -64,11 +64,11 @@ module Benchmark
           end
 
           properties = {'stroke' => color}
-          features << create_line(coords, properties)
+          features << Benchmark::FeatureWriter.create_line(coords, properties)
         end
       else
         coords = path.collect{|i| i.coordinates }
-        features << create_line(coords)
+        features << Benchmark::FeatureWriter.create_line(coords)
       end
       return features
     end
@@ -97,7 +97,7 @@ module Benchmark
 
         properties =  { size: 'large', color: color }
         properties[:symbol] = opts[:symbol] if opts[:symbol]
-        features << create_marker(item, properties)
+        features << Benchmark::FeatureWriter.create_marker(item, properties)
       end
 
       return features
@@ -105,6 +105,7 @@ module Benchmark
 
 
     def generate features, file='benchmark.geojson'
+      features = [features] unless features.is_a?(Array)
       File.open(file, 'w') do |geojson|
         puts "writing #{features.length} features to #{file}"
         geojson_hash = { type: "FeatureCollection", features: features }

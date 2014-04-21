@@ -18,7 +18,7 @@ module Benchmark
     end
 
     def self.parse_run file, mode
-      path = Path.new
+      path = Path.new # only used for realtime run
       run = Run.new mode:mode
 
       ::CSV.foreach file do |line|
