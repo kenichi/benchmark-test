@@ -1,0 +1,6 @@
+require 'lib/benchmark/csv'
+require 'lib/benchmark/time'
+require 'lib/benchmark/path'
+require 'lib/benchmark/run'
+require 'lib/benchmark/parser'
+require 'lib/benchmark/feature_writer'
