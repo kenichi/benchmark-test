@@ -80,32 +80,67 @@ module Benchmark
       return self.parse_run file, 'adaptive'
     end
 
-    def do_it
-      features = []
+    def self.parse_timeline directory, os, tag, wifi
 
-      get_triggers
-      features += featurify_triggers
+      mode = [os, tag, wifi].join('_')
 
-      parse_realtime
-      parse_region
-      parse_adaptive
+      realtime_file = "#{directory}/realtime_#{mode}.txt"
+      region_file = "#{directory}/region_#{mode}.txt"
+      adaptive_file = "#{directory}/sdk_#{mode}.txt"
 
-      fw = FeatureWriter.new start_time: @start_time, end_time: @end_time
+      puts "parsing #{realtime_file}"
+      path, realtime = Benchmark::Parser.parse_realtime realtime_file
+      if File.exists? region_file
+      puts "parsing #{region_file}"
+      region = Benchmark::Parser.parse_region region_file
+      end
+      puts "parsing #{adaptive_file}"
+      adaptive = Benchmark::Parser.parse_adaptive adaptive_file
 
-      path_features = fw.featurify_path @properties[:path]
+      realtime.trim path.start_time, path.end_time
+      region.trim path.start_time, path.end_time if region
+      adaptive.trim path.start_time, path.end_time
 
-      puts "found #{@properties[:realtime].length} realtime items"
-      realtime_features = fw.featurify_markers @properties[:realtime], { symbol: 'fire-station' }
+      puts "Parsed #{mode} to timeline"
+      puts "gathered path data of #{path.total_minutes} minutes with #{path.items.size} data points"
+      puts
+      puts "found #{realtime.items.size} realtime data points over #{realtime.total_minutes} minutes"
+      puts "     - #{realtime.items.select{|i| i.type == 'enter'}.size} enter and #{realtime.items.select{|i| i.type == "exit"}.size} exit"
+      if region
+        puts "found #{region.items.size} region data points over #{region.total_minutes} minutes"
+        puts "     - #{region.items.select{|i| i.type == 'enter'}.size} enter and #{region.items.select{|i| i.type == "exit"}.size} exit"
+      end
+      puts "found #{adaptive.items.size} adaptive data points over #{adaptive.total_minutes} minutes"
+      puts "     - #{adaptive.items.select{|i| i.type == 'enter'}.size} enter and #{adaptive.items.select{|i| i.type == "exit"}.size} exit"
 
+      out_dir = "public/data/#{mode}"
+      Dir.mkdir out_dir
 
-      puts "found #{@properties[:region].length} region items"
-      region_features = fw.featurify_markers @properties[:region], { symbol: 'zoo' }
+      puts "writing path to #{out_dir}/path.geojson"
+      fw = Benchmark::FeatureWriter.new start_time: path.start_time, end_time: path.end_time
+      fw.generate path.to_feature, "#{out_dir}/path.geojson"
 
-      puts "found #{@properties[:adaptive].length} adaptive items"
-      adaptive_features = fw.featurify_markers @properties[:adaptive], { symbol: 'star' }
+      colors = {path: "#F765E1",
+                realtime: {enter: "#F72F2F", exit: "#A11010"},
+                region: {enter: "#5873E0", exit: "#0D34D1"},
+                adaptive: {enter: "#49E364", exit: "#1B852E"}}
 
-      fw.generate features
+      marker_features = []
+      marker_features += path.items.collect{|i| i.to_feature color: colors[:path], radius: 3}
+      marker_features += realtime.items.collect{|i| i.to_feature color: colors[:realtime][i.type.to_sym], radius: 10}
+
+      if region
+        marker_features += region.items.collect{|i| i.to_feature color: colors[:region][i.type.to_sym], radius: 10}
+      end
+
+      marker_features += adaptive.items.collect{|i| i.to_feature color: colors[:adaptive][i.type.to_sym], radius: 10}
+
+      marker_features.sort_by! {|f| f[:properties]["time"] }
+
+      puts "writing markers to #{out_dir}/slider.geojson"
+      fw.generate marker_features, "#{out_dir}/slider.geojson"
 
     end
+
   end
 end
