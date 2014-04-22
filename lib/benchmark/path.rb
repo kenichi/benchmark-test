@@ -4,14 +4,29 @@ module Benchmark
     include Benchmark::CSV
     include Benchmark::Time
 
+    attr_accessor :os, :tag, :wifi
+
     attr_reader :items
 
     manage_timestamps :items
 
+    def initialize opts={}
+      super
+      @os = opts[:os]
+      @tag = opts[:tag]
+      @wifi = opts[:wifi] || 'wifi'
+    end
+
+    def description
+      "path: #{@os} #{@tag} #{@wifi}\n" +
+      "  - #{total_minutes} minutes\n" +
+      "  - #{items.size} data points"
+    end
+
     def to_feature opts={}
 
-      properties = {}
-      properties.merge(opts[:properties]) if opts[:properties]
+      properties = {os: @os, wifi: @wifi}
+      properties.merge!(opts)
 
       coords = items.collect{|i| i.coordinates}
 
@@ -45,9 +60,9 @@ module Benchmark
     end
 
     def to_feature opts={}
-      properties = {}
-      properties["time"] = Time.at(timestamp).to_s
-      properties.merge(opts[:properties]) if opts[:properties]
+      properties = {accuracy: @accuracy}
+      properties["time"] = ::Time.at(timestamp).to_s
+      properties.merge!(opts)
 
       Benchmark::FeatureWriter.create_point self, properties
     end

@@ -4,7 +4,7 @@ module Benchmark
     include Benchmark::CSV
     include Benchmark::Time
 
-    attr_accessor :device_id, :mode, :wifi, :markers
+    attr_accessor :device_id, :mode, :os, :tag, :wifi, :markers
 
     attr_reader :battery_start, :battery_stop
 
@@ -14,7 +14,16 @@ module Benchmark
       super
       @device_id = opts[:device_id]
       @mode = opts[:mode]
-      @wifi = opts[:wifi] || true
+      @os = opts[:os]
+      @tag = opts[:tag]
+      @wifi = opts[:wifi] || 'wifi'
+    end
+
+    def description
+      "#{@mode}: #{@os} #{@tag} #{@wifi} #{@device_id}\n" +
+      "  - #{items.size} data points over #{total_minutes} minutes\n" +
+      "  - #{items.select{|i| i.type == 'enter'}.size} enter and #{items.select{|i| i.type == "exit"}.size} exit\n" +
+      "  - battery: %.2f percent per hour" % battery_usage
     end
 
     def battery_start timestamp, battery
@@ -37,16 +46,24 @@ module Benchmark
       drain / hours
     end
 
+    def to_features opts={}
+      properties = {os: @os, mode: @mode, wifi: @wifi, device_id: @device_id}
+      properties.merge!(opts)
+
+      @markers.collect{|m| Benchmark::FeatureWriter.create_point m, properties}
+    end
+
     def csv_header
-      %w{ Timestamp Type Lon Lat Accuracy Trigger Device Mode Wifi }
+      %w{ Timestamp Type Lon Lat Accuracy Trigger Device OS Mode Wifi }
     end
 
     def csv_body
       @markers.collect do |marker|
         [marker.timestamp, marker.type, marker.lon, marker.lat, marker.accuracy,
-         marker.trigger_id, @device_id, @mode, @wifi]
+         marker.trigger_id, @device_id, @os, @mode, @wifi]
       end
     end
+
   end
 
 
@@ -68,7 +85,7 @@ module Benchmark
     end
 
     def to_feature opts={}
-      properties = {}
+      properties = {type: @type, accuracy: @accuracy, trigger_id: @trigger_id}
       properties["time"] = ::Time.at(timestamp).to_s
       properties.merge!(opts)
 
