@@ -21,6 +21,8 @@ module Benchmark
       path = Path.new # only used for realtime run
       run = Run.new mode:mode
 
+      prev_line = nil
+
       ::CSV.foreach file do |line|
 
         time = line[0].split(' ').last.to_i
@@ -43,11 +45,20 @@ module Benchmark
             run.device_id = line[1]
           elsif line[3].match 'stop'
             run.battery_stop time, line[2].to_f
+          elsif line[2].match 'enter'
+            run.add_item Marker.new type: 'enter', timestamp: time, trigger_id: line[1],
+              lat: prev_line[1].to_f, lon: prev_line[2].to_f, accuracy: line[5]
+
+          elsif line[2].match 'exit'
+            run.add_item Marker.new type: 'exit', timestamp: time, trigger_id: line[1],
+              lat: prev_line[1].to_f, lon: prev_line[2].to_f, accuracy: line[5]
 
           elsif mode == 'realtime'
             path.add_item Item.new timestamp: time, lat: line[1].to_f, lon: line[2].to_f, accuracy: line[3]
+            prev_line = line
           end
         end
+
       end
 
       puts sprintf "%s battery usage: %.2f percent per hour", mode, run.battery_usage
