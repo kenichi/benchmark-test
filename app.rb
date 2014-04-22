@@ -11,7 +11,11 @@ class BenchmarkViewer < Angelo::Base
   end
 
   get '/' do
-    @trigger_list = @gt.post 'trigger/list', boundingBox: :geojson
+    @tag = params["tag"]
+    @os = params["os"]
+    @wifi = params["wifi"]
+    @mode = [@os, @tag, @wifi].join('_')
+    @trigger_list = @gt.post 'trigger/list', tags: [@tag], boundingBox: :geojson
     erb :index
   end
 

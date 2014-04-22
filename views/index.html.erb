@@ -30,13 +30,13 @@ id: trigger.triggerId,
 }
 
 // Load Path Data
-$.getJSON("data/path.geojson", function(json) {
+$.getJSON('<%= "data/#{@mode}/path.geojson" %>', function(json) {
         var pathLayer = L.geoJson(json);
         pathLayer.addTo(map);
     });
 
 // Load Slider Data
-$.getJSON("data/slider.geojson", function(json) {
+$.getJSON('<%= "data/#{@mode}/slider.geojson" %>', function(json) {
         var testlayer = L.geoJson(json, {
             style: function(feature) {
                 return feature.properties;
