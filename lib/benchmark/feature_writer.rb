@@ -106,8 +106,8 @@ module Benchmark
 
     def generate features, file='benchmark.geojson'
       features = [features] unless features.is_a?(Array)
+      puts "writing #{features.length} features to #{file}"
       File.open(file, 'w') do |geojson|
-        puts "writing #{features.length} features to #{file}"
         geojson_hash = { type: "FeatureCollection", features: features }
         geojson.write JSON.pretty_generate geojson_hash
       end

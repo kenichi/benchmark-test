@@ -61,8 +61,6 @@ module Benchmark
 
       end
 
-      puts sprintf "%s battery usage: %.2f percent per hour", mode, run.battery_usage
-
       return run if path.items.empty?
 
       return path, run
@@ -91,8 +89,8 @@ module Benchmark
       puts "parsing #{realtime_file}"
       path, realtime = Benchmark::Parser.parse_realtime realtime_file
       if File.exists? region_file
-      puts "parsing #{region_file}"
-      region = Benchmark::Parser.parse_region region_file
+        puts "parsing #{region_file}"
+        region = Benchmark::Parser.parse_region region_file
       end
       puts "parsing #{adaptive_file}"
       adaptive = Benchmark::Parser.parse_adaptive adaptive_file
@@ -101,22 +99,26 @@ module Benchmark
       region.trim path.start_time, path.end_time if region
       adaptive.trim path.start_time, path.end_time
 
+      puts
       puts "Parsed #{mode} to timeline"
       puts "gathered path data of #{path.total_minutes} minutes with #{path.items.size} data points"
       puts
-      puts "found #{realtime.items.size} realtime data points over #{realtime.total_minutes} minutes"
+      puts "Realtime: #{realtime.items.size} data points over #{realtime.total_minutes} minutes"
       puts "     - #{realtime.items.select{|i| i.type == 'enter'}.size} enter and #{realtime.items.select{|i| i.type == "exit"}.size} exit"
+      puts "     - battery: %.2f percent per hour" % realtime.battery_usage
       if region
-        puts "found #{region.items.size} region data points over #{region.total_minutes} minutes"
+        puts "Region: #{region.items.size} data points over #{region.total_minutes} minutes"
         puts "     - #{region.items.select{|i| i.type == 'enter'}.size} enter and #{region.items.select{|i| i.type == "exit"}.size} exit"
+        puts "     - battery: %.2f percent per hour" % region.battery_usage
       end
-      puts "found #{adaptive.items.size} adaptive data points over #{adaptive.total_minutes} minutes"
+      puts "Adaptive: #{adaptive.items.size} data points over #{adaptive.total_minutes} minutes"
       puts "     - #{adaptive.items.select{|i| i.type == 'enter'}.size} enter and #{adaptive.items.select{|i| i.type == "exit"}.size} exit"
+      puts "     - battery: %.2f percent per hour" % adaptive.battery_usage
+      puts
 
       out_dir = "public/data/#{mode}"
-      Dir.mkdir out_dir
+      Dir.mkdir out_dir unless Dir.exists? out_dir
 
-      puts "writing path to #{out_dir}/path.geojson"
       fw = Benchmark::FeatureWriter.new start_time: path.start_time, end_time: path.end_time
       fw.generate path.to_feature, "#{out_dir}/path.geojson"
 
@@ -137,7 +139,6 @@ module Benchmark
 
       marker_features.sort_by! {|f| f[:properties]["time"] }
 
-      puts "writing markers to #{out_dir}/slider.geojson"
       fw.generate marker_features, "#{out_dir}/slider.geojson"
 
     end
