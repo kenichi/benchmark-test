@@ -15,7 +15,8 @@ var ne = new L.LatLng(cs[2][1], cs[2][0]);
 var bounds = new L.LatLngBounds(sw, ne);
 map.fitBounds(bounds);
 
-var locLayer = L.geoJson(null, { style: { color: "#00ff00" } }).addTo(map);
+// highlight color #E9F511
+var locLayer = L.geoJson(null, { style: { color: "#EDF28A" } }).addTo(map);
 
 for (var i = 0; i < triggerList.triggers.length; i++) {
     var trigger = triggerList.triggers[i];
@@ -39,6 +40,9 @@ $.getJSON("data/slider.geojson", function(json) {
         var testlayer = L.geoJson(json, {
             style: function(feature) {
                 return feature.properties;
+            },
+            pointToLayer: function(feature, latlng) {
+                return new L.CircleMarker(latlng, {radius: feature.properties.radius, fillOpacity: 0.85});
             }});
 
       sliderControl = L.control.sliderControl({
