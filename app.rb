@@ -11,6 +11,7 @@ class BenchmarkViewer < Angelo::Base
   end
 
   get '/' do
+    @run = params["run"]
     @tag = params["tag"]
     @os = params["os"]
     @wifi = params["wifi"]

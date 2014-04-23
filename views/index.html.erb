@@ -7,7 +7,7 @@ var map = L.map('map');
 L.esri.basemapLayer("Gray").addTo(map);
 
 // Load Trigger Data
-$.getJSON('<%= "data/#{@mode}/trigger.json" %>', function(triggerList) {
+$.getJSON('<%= "data/#{@run}/#{@mode}/trigger.json" %>', function(triggerList) {
 
     // highlight color #E9F511
     var locLayer = L.geoJson(null, {
@@ -36,13 +36,13 @@ $.getJSON('<%= "data/#{@mode}/trigger.json" %>', function(triggerList) {
 });
 
 // Load Path Data
-$.getJSON('<%= "data/#{@mode}/path.geojson" %>', function(json) {
+$.getJSON('<%= "data/#{@run}/#{@mode}/path.geojson" %>', function(json) {
     var pathLayer = L.geoJson(json);
     pathLayer.addTo(map);
 });
 
 // Load Slider Data
-$.getJSON('<%= "data/#{@mode}/slider.geojson" %>', function(json) {
+$.getJSON('<%= "data/#{@run}/#{@mode}/slider.geojson" %>', function(json) {
     var testlayer = L.geoJson(json, {
         style: function(feature) {
             return feature.properties;

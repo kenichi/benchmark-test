@@ -125,7 +125,9 @@ module Benchmark
       puts adaptive.description
       puts
 
-      out_dir = "public/data/#{mode}"
+      run_dir = "public/data/#{directory}"
+      out_dir = "#{run_dir}/#{mode}"
+      Dir.mkdir run_dir unless Dir.exists? run_dir
       Dir.mkdir out_dir unless Dir.exists? out_dir
 
       fw = Benchmark::FeatureWriter.new start_time: path.start_time, end_time: path.end_time
