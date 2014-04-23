@@ -57,7 +57,7 @@ $.getJSON('<%= "data/#{@mode}/slider.geojson" %>', function(json) {
     sliderControl = L.control.sliderControl({
         position: "topright",
         layer: testlayer,
-        range: true
+        follow: 10
     });
 
     //Make sure to add the slider to the map ;-)
