@@ -1,5 +1,6 @@
 require 'csv'
 require 'json'
+require 'yaml'
 require 'geotrigger'
 
 module Benchmark
@@ -12,9 +13,9 @@ module Benchmark
       @properties = {}
     end
 
-    def get_triggers
+    def self.get_triggers tag
       gt = Geotrigger::Application.new YAML.load_file 'geotrigger.yml'
-      @properties[:triggers] = gt.triggers(tags: 'battery')
+      gt.post 'trigger/list', tags: [tag], boundingBox: :geojson
     end
 
     def self.parse_run file, opts={}
@@ -139,6 +140,17 @@ module Benchmark
       marker_features.sort_by! {|f| f[:properties]["time"] }
 
       fw.generate marker_features, "#{out_dir}/slider.geojson"
+
+      puts "getting triggers"
+
+      triggers = get_triggers 'biking' #tag
+
+      trigger_file = "#{out_dir}/trigger.json"
+      puts "writing #{triggers["triggers"].size} triggers to #{trigger_file}"
+
+      File.open(trigger_file, 'w') do |f|
+        f.write triggers.to_json
+      end
 
     end
 

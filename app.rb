@@ -15,7 +15,8 @@ class BenchmarkViewer < Angelo::Base
     @os = params["os"]
     @wifi = params["wifi"]
     @mode = [@os, @tag, @wifi].join('_')
-    @trigger_list = @gt.post 'trigger/list', tags: [@tag], boundingBox: :geojson
+    #@trigger_list = @gt.post 'trigger/list', tags: [@tag], boundingBox: :geojson
+    @trigger_list = @gt.post 'trigger/list', tags: ['biking'], boundingBox: :geojson
     erb :index
   end
 

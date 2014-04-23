@@ -60,9 +60,10 @@ module Benchmark
     end
 
     def to_feature opts={}
-      properties = {accuracy: @accuracy}
+      properties = {accuracy: @accuracy, timestamp: timestamp}
       properties["time"] = ::Time.at(timestamp).to_s
       properties.merge!(opts)
+      properties.merge!(description: properties.inspect)
 
       Benchmark::FeatureWriter.create_point self, properties
     end

@@ -6,83 +6,68 @@ var sliderControl = null;
 var map = L.map('map');
 L.esri.basemapLayer("Gray").addTo(map);
 
+// Load Trigger Data
+$.getJSON('<%= "data/#{@mode}/trigger.json" %>', function(triggerList) {
 
-var triggerList = JSON.parse('<%= @trigger_list.to_json %>');
+    // highlight color #E9F511
+    var locLayer = L.geoJson(null, {
+        style: { color: "#EDF28A" },
+        onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.description);
+        }
+    }).addTo(map);
 
-var cs = triggerList.boundingBox.coordinates[0];
-var sw = new L.LatLng(cs[0][1], cs[0][0]);
-var ne = new L.LatLng(cs[2][1], cs[2][0]);
-var bounds = new L.LatLngBounds(sw, ne);
-map.fitBounds(bounds);
+    for (var i = 0; i < triggerList.triggers.length; i++) {
+        var trigger = triggerList.triggers[i];
+        var geojson = { id: trigger.triggerId,
+                        type: "Feature",
+                        properties: {description: "Trigger " + trigger.triggerId},
+                        geometry: trigger.condition.geo.geojson
+                      };
+        locLayer.addData(geojson);
+    }
 
-// highlight color #E9F511
-var locLayer = L.geoJson(null, { style: { color: "#EDF28A" } }).addTo(map);
+    var cs = triggerList.boundingBox.coordinates[0];
+    var sw = new L.LatLng(cs[0][1], cs[0][0]);
+    var ne = new L.LatLng(cs[2][1], cs[2][0]);
+    var bounds = new L.LatLngBounds(sw, ne);
+    map.fitBounds(bounds);
 
-for (var i = 0; i < triggerList.triggers.length; i++) {
-    var trigger = triggerList.triggers[i];
-    var geojson = {
-id: trigger.triggerId,
-    type: "Feature",
-    properties: null,
-    geometry: trigger.condition.geo.geojson
-    };
-    locLayer.addData(geojson);
-}
+});
 
 // Load Path Data
 $.getJSON('<%= "data/#{@mode}/path.geojson" %>', function(json) {
-        var pathLayer = L.geoJson(json);
-        pathLayer.addTo(map);
-    });
+    var pathLayer = L.geoJson(json);
+    pathLayer.addTo(map);
+});
 
 // Load Slider Data
 $.getJSON('<%= "data/#{@mode}/slider.geojson" %>', function(json) {
-        var testlayer = L.geoJson(json, {
-            style: function(feature) {
-                return feature.properties;
-            },
-            pointToLayer: function(feature, latlng) {
-                return new L.CircleMarker(latlng, {radius: feature.properties.radius, fillOpacity: 0.85});
-            }});
+    var testlayer = L.geoJson(json, {
+        style: function(feature) {
+            return feature.properties;
+        },
+        onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.description);
+        },
+        pointToLayer: function(feature, latlng) {
+            return new L.CircleMarker(latlng, {radius: feature.properties.radius, fillOpacity: 0.85});
+        }});
 
-      sliderControl = L.control.sliderControl({
+    sliderControl = L.control.sliderControl({
         position: "topright",
         layer: testlayer,
         range: true
-        });
+    });
 
     //Make sure to add the slider to the map ;-)
     map.addControl(sliderControl);
     //And initialize the slider
     sliderControl.startSlider();
-  });
 
-/*
+    console.log(sliderControl.options.minValue);
+    console.log(sliderControl.options.maxValue);
 
-var timer_index = 0;
-var timer = setInterval( getTimeslice, 100);
-var prev_timer_layer;
+});
 
-function getTimeslice() {
-
-    $.get('timeslice?index='+timer_index,
-            loadTimeslice );
-}
-
-function loadTimeslice(data) {
-    timer_index += 1;
-    console.log(data);
-    timer_layer = L.geoJson( JSON.parse(data) );
-    timer_layer.addTo(map);
-
-    if (prev_timer_layer) {
-        map.removeLayer(prev_timer_layer);
-    }
-
-    prev_timer_layer = timer_layer;
-
-}
-
-// clearInterval(timer)
-*/
 </script>
