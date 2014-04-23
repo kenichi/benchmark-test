@@ -133,20 +133,15 @@ module Benchmark
       fw = Benchmark::FeatureWriter.new start_time: path.start_time, end_time: path.end_time
       fw.generate path.to_feature, "#{out_dir}/path.geojson"
 
-      colors = {path: "#F765E1",
-                realtime: {enter: "#F72F2F", exit: "#A11010"},
-                region: {enter: "#5873E0", exit: "#0D34D1"},
-                adaptive: {enter: "#49E364", exit: "#1B852E"}}
-
       marker_features = []
-      marker_features += path.items.collect{|i| i.to_feature color: colors[:path], radius: 3}
-      marker_features += realtime.items.collect{|i| i.to_feature color: colors[:realtime][i.type.to_sym], radius: 10}
+      marker_features += path.items.collect{|i| i.to_feature style: 'path'}
+      marker_features += realtime.items.collect{|i| i.to_feature style: 'marker', mode: 'realtime'}
 
       if region
-        marker_features += region.items.collect{|i| i.to_feature color: colors[:region][i.type.to_sym], radius: 10}
+        marker_features += region.items.collect{|i| i.to_feature style: 'marker', mode: 'region'}
       end
 
-      marker_features += adaptive.items.collect{|i| i.to_feature color: colors[:adaptive][i.type.to_sym], radius: 10}
+      marker_features += adaptive.items.collect{|i| i.to_feature style: 'marker', mode: 'adaptive'}
 
       marker_features.sort_by! {|f| f[:properties]["time"] }
 
