@@ -38,11 +38,20 @@ module Benchmark
           time = DateTime.parse(line[0]).strftime('%s').to_i
         end
 
+        # android realtime
+        if line.length == 7 && line[5].match('realtime')
+         line = [line[0], line[1], line[4], line[2], line[3], 0, line[5], line[6]]
+        end
+
+        if line.length == 8 && line[6].match('adaptive')
+          line = [line[0], line[1], line[5], line[2], line[3], line[4], line[6], line[7]]
+        end
+
         if line.length == 8
-          if line[6].match('enter') || line[2].match('enter')
+          if line.map(&:to_s).any?{|l| l.match('enter') }
             run.add_item Marker.new type: 'enter', timestamp: time, trigger_id: line[1],
               lat: line[3].to_f, lon: line[4].to_f, accuracy: line[5]
-          elsif line[6].match('exit') || line[2].match('exit')
+          elsif line.map(&:to_s).any?{|l| l.match('exit') }
             run.add_item Marker.new type: 'exit', timestamp: time, trigger_id: line[1],
               lat: line[3].to_f, lon: line[4].to_f, accuracy: line[5]
           end
@@ -101,7 +110,7 @@ module Benchmark
         region = Benchmark::Parser.parse_run region_file, opts.merge(mode: 'region')
       end
       puts "parsing #{adaptive_file}"
-      adaptive = Benchmark::Parser.parse_run adaptive_file, opts.merge(mode: 'region')
+      adaptive = Benchmark::Parser.parse_run adaptive_file, opts.merge(mode: 'adaptive')
 
       realtime.trim path.start_time, path.end_time
       region.trim path.start_time, path.end_time if region
@@ -143,7 +152,7 @@ module Benchmark
 
       puts "getting triggers"
 
-      triggers = get_triggers 'biking' #tag
+      triggers = get_triggers tag
 
       trigger_file = "#{out_dir}/trigger.json"
       puts "writing #{triggers["triggers"].size} triggers to #{trigger_file}"
